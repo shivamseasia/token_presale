@@ -13,7 +13,7 @@ pub struct ReleaseFromReserve<'info> {
     pub state: Account<'info, PresaleState>,
 }
 
-pub fn handler(
+pub fn release_tokens(
     ctx: Context<ReleaseFromReserve>,
     amount: u64,
 ) -> Result<()> {

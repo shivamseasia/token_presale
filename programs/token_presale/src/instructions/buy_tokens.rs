@@ -47,7 +47,7 @@ pub struct BuyTokens<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn handler(
+pub fn buy_tokens(
     ctx: Context<BuyTokens>,
     usdt_amount: u64,
 ) -> Result<()> {

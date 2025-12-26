@@ -43,7 +43,7 @@ pub struct Initialize<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn handler(
+pub fn initialize(
     ctx: Context<Initialize>,
     price_usdt: u64,
     presale_duration_secs: i64,

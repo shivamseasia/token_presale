@@ -11,7 +11,7 @@ pub struct UpdatePrice<'info> {
     pub state: Account<'info, PresaleState>,
 }
 
-pub fn handler(ctx: Context<UpdatePrice>, new_price: u64) -> Result<()> {
+pub fn update_price(ctx: Context<UpdatePrice>, new_price: u64) -> Result<()> {
     let state = &mut ctx.accounts.state;
 
     require!(ctx.accounts.admin.key() == state.admin, PresaleError::Unauthorized);
