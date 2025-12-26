@@ -5,14 +5,14 @@ package_manager = "yarn"
 resolution = true
 skip-lint = true
 
-[programs.localnet]
+[programs.devnet]
 token_presale = "uz3pV4j51aJQ88mSsh5VasZU6YLTepAgPK2Dgs3GpZr"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "localnet"
+cluster = "devnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]

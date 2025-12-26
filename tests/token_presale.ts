@@ -63,7 +63,7 @@ describe("token_presale", () => {
   // 1. INITIALIZE
   // ----------------------------------------------------------------
   it("Initializes the presale", async () => {
-    const duration = new anchor.BN(60 * 60 * 24);
+    const duration = new anchor.BN(60 * 60 * 24 * 30 * 3);
 
     await program.methods
       .initialize(INITIAL_PRICE, duration)
