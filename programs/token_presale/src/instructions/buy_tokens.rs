@@ -1,8 +1,10 @@
+use crate::constants::*;
+use crate::{
+    errors::PresaleError,
+    state::{PresaleState, UserPurchase},
+};
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Token, Transfer};
-use crate::{state::{PresaleState, UserPurchase}, errors::PresaleError};
-use crate::constants::*;
-
 
 #[derive(Accounts)]
 pub struct BuyTokens<'info> {
@@ -47,10 +49,8 @@ pub struct BuyTokens<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn buy_tokens(
-    ctx: Context<BuyTokens>,
-    usdt_amount: u64,
-) -> Result<()> {
+pub fn buy_tokens(ctx: Context<BuyTokens>, usdt_amount: u64) -> Result<()> {
+    require!(!ctx.accounts.state.paused, PresaleError::PresalePaused);
     require!(usdt_amount > 0, PresaleError::InvalidAmount);
 
     let state = &mut ctx.accounts.state;
@@ -64,7 +64,6 @@ pub fn buy_tokens(
         .ok_or(PresaleError::InvalidPrice)? as u64;
 
     require!(tokens >= MIN_TOKENS_PER_BUY, PresaleError::BelowMinimum);
-
 
     if user.total_bought == 0 {
         user.buyer = ctx.accounts.buyer.key();
@@ -108,10 +107,7 @@ pub fn buy_tokens(
     );
     token::transfer(cpi_ctx_usdt, usdt_amount)?;
 
-    let seeds: &[&[u8]] = &[
-        b"state".as_ref(),
-        &[state.bump],
-    ];
+    let seeds: &[&[u8]] = &[b"state".as_ref(), &[state.bump]];
     let signer = &[seeds];
 
     // Transfer sale tokens from vault to buyer

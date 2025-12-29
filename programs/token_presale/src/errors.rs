@@ -28,4 +28,10 @@ pub enum PresaleError {
 
     #[msg("Invalid price")]
     InvalidPrice,
+
+    #[msg("Insufficient treasury balance")]
+    InsufficientTreasuryBalance,
+
+    #[msg("Presale is paused")]
+    PresalePaused,
 }

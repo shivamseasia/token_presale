@@ -1,5 +1,5 @@
+use crate::{errors::*, state::*};
 use anchor_lang::prelude::*;
-use crate::{state::*, errors::*};
 
 #[derive(Accounts)]
 pub struct ReleaseFromReserve<'info> {
@@ -13,17 +13,20 @@ pub struct ReleaseFromReserve<'info> {
     pub state: Account<'info, PresaleState>,
 }
 
-pub fn release_tokens(
-    ctx: Context<ReleaseFromReserve>,
-    amount: u64,
-) -> Result<()> {
-
+pub fn release_tokens(ctx: Context<ReleaseFromReserve>, amount: u64) -> Result<()> {
+    require!(!ctx.accounts.state.paused, PresaleError::PresalePaused);
     let state = &mut ctx.accounts.state;
     let now = Clock::get()?.unix_timestamp;
 
-    require!(ctx.accounts.admin.key() == state.admin, PresaleError::Unauthorized);
+    require!(
+        ctx.accounts.admin.key() == state.admin,
+        PresaleError::Unauthorized
+    );
     require!(now > state.presale_end_ts, PresaleError::PresaleEnded);
-    require!(state.reserved_supply >= amount, PresaleError::InsufficientUnlockedReserve);
+    require!(
+        state.reserved_supply >= amount,
+        PresaleError::InsufficientUnlockedReserve
+    );
 
     state.reserved_supply -= amount;
     state.released_from_reserve += amount;

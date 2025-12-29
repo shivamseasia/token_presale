@@ -1,6 +1,6 @@
-use anchor_lang::prelude::*;
-use crate::state::*;
 use crate::errors::*;
+use crate::state::*;
+use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
 pub struct UpdatePrice<'info> {
@@ -12,9 +12,12 @@ pub struct UpdatePrice<'info> {
 }
 
 pub fn update_price(ctx: Context<UpdatePrice>, new_price: u64) -> Result<()> {
+    require!(!ctx.accounts.state.paused, PresaleError::PresalePaused);
     let state = &mut ctx.accounts.state;
-
-    require!(ctx.accounts.admin.key() == state.admin, PresaleError::Unauthorized);
+    require!(
+        ctx.accounts.admin.key() == state.admin,
+        PresaleError::Unauthorized
+    );
 
     state.token_price_usdt = new_price;
 

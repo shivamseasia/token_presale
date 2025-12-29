@@ -1,9 +1,9 @@
 use anchor_lang::prelude::*;
 
+pub mod constants;
 pub mod errors;
 pub mod instructions;
 pub mod state;
-pub mod constants;
 
 use instructions::*;
 
@@ -31,5 +31,17 @@ pub mod token_presale {
 
     pub fn update_price(ctx: Context<UpdatePrice>, new_price: u64) -> Result<()> {
         update_price::update_price(ctx, new_price)
+    }
+
+    pub fn withdraw_usdt(ctx: Context<WithdrawUsdt>, amount: u64) -> Result<()> {
+        withdraw_usdt::withdraw_usdt(ctx, amount)
+    }
+
+    pub fn pause(ctx: Context<Pause>) -> Result<()> {
+        pause::pause(ctx)
+    }
+
+    pub fn unpause(ctx: Context<Unpause>) -> Result<()> {
+        unpause::unpause(ctx)
     }
 }

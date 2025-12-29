@@ -13,6 +13,7 @@ pub struct PresaleState {
     pub total_supply: u64,
     pub presale_supply: u64,
     pub reserved_supply: u64,
+    pub paused: bool,
 
     pub released_from_reserve: u64,
 

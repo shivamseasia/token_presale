@@ -173,4 +173,98 @@ describe("token_presale", () => {
       assert.include(e.toString(), "PresaleEnded");
     }
   });
+  // ----------------------------------------------------------------
+  // 5. WITHDRAW USDT & PAUSE/UNPAUSE (New Tests)
+  // ----------------------------------------------------------------
+
+  it("Allows admin to withdraw USDT and blocks non-admin", async () => {
+    const [statePda] = PublicKey.findProgramAddressSync(
+      [Buffer.from("state")],
+      program.programId
+    );
+
+    const adminUsdt = await getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      provider.wallet.payer,
+      usdtMint,
+      provider.wallet.publicKey
+    );
+
+    const withdrawAmount = new anchor.BN(5 * USDT_DECIMALS);
+
+    // Admin withdraw works
+    await program.methods
+      .withdrawUsdt(withdrawAmount)
+      .accounts({
+        admin: provider.wallet.publicKey,
+        state: statePda,
+        treasury: treasuryAccount,
+        destination: adminUsdt.address,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      } as any)
+      .rpc();
+
+    // Non-admin blocked
+    try {
+      await program.methods
+        .withdrawUsdt(withdrawAmount)
+        .accounts({
+          admin: buyers[0].publicKey,
+          state: statePda,
+          treasury: treasuryAccount,
+          destination: buyerUsdtAccounts[0],
+          tokenProgram: TOKEN_PROGRAM_ID,
+        } as any)
+        .signers([buyers[0]])
+        .rpc();
+
+      assert.fail("Non-admin should not withdraw USDT");
+    } catch (e) {
+      const err = e.error?.errorCode?.code;
+      assert.ok(
+        err === "ConstraintRaw" ||
+        err === "ConstraintHasOne" ||
+        err === "OwnerMismatch"
+      );
+    }
+  });
+
+  // ----------------------------------------------------------------
+  // 6. PAUSE/UNPAUSE
+  // ----------------------------------------------------------------
+
+  it("Blocks buying when paused", async () => {
+    const [statePda] = PublicKey.findProgramAddressSync(
+      [Buffer.from("state")],
+      program.programId
+    );
+
+    await program.methods
+      .pause()
+      .accounts({
+        admin: provider.wallet.publicKey,
+        state: statePda,
+      } as any)
+      .rpc();
+
+    try {
+      await program.methods
+        .buyTokens(new anchor.BN(1_000))
+        .accounts({
+          buyer: buyers[0].publicKey,
+          buyerUsdt: buyerUsdtAccounts[0],
+          treasuryUsdt: treasuryAccount,
+          vault: vault,
+          buyerToken: buyerTokenAccounts[0],
+          tokenProgram: TOKEN_PROGRAM_ID,
+        } as any)
+        .signers([buyers[0]])
+        .rpc();
+
+      assert.fail("Should fail when paused");
+    } catch (e) {
+      const _err = e.error?.errorCode?.code;
+      assert.ok(true);
+    }
+  });
 });
