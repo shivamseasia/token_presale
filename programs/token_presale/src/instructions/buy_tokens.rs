@@ -1,4 +1,5 @@
 use crate::constants::*;
+use crate::events::*;
 use crate::{
     errors::PresaleError,
     state::{PresaleState, UserPurchase},
@@ -121,6 +122,13 @@ pub fn buy_tokens(ctx: Context<BuyTokens>, usdt_amount: u64) -> Result<()> {
         signer,
     );
     token::transfer(cpi_ctx_token, tokens)?;
+
+    emit!(TokensPurchased {
+        buyer: ctx.accounts.buyer.key(),
+        usdt_amount,
+        tokens_amount: tokens,
+        timestamp: Clock::get()?.unix_timestamp,
+    });
 
     Ok(())
 }

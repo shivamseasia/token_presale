@@ -1,6 +1,7 @@
+use anchor_lang::prelude::*;
 use crate::errors::*;
 use crate::state::*;
-use anchor_lang::prelude::*;
+use crate::events::*;
 
 #[derive(Accounts)]
 pub struct UpdatePrice<'info> {
@@ -19,7 +20,14 @@ pub fn update_price(ctx: Context<UpdatePrice>, new_price: u64) -> Result<()> {
         PresaleError::Unauthorized
     );
 
+    let old_price = state.token_price_usdt;
     state.token_price_usdt = new_price;
+    emit!(PriceUpdated {
+        admin: ctx.accounts.admin.key(),
+        old_price,
+        new_price,
+        timestamp: Clock::get()?.unix_timestamp,
+    });
 
     Ok(())
 }

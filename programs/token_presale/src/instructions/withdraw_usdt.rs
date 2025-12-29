@@ -1,3 +1,4 @@
+use crate::events::*;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Token, TokenAccount, Transfer};
 
@@ -6,9 +7,7 @@ use crate::state::PresaleState;
 
 #[derive(Accounts)]
 pub struct WithdrawUsdt<'info> {
-    #[account(
-        has_one = admin,
-    )]
+    #[account(mut, has_one = admin)]
     pub state: Account<'info, PresaleState>,
 
     pub admin: Signer<'info>,
@@ -37,6 +36,21 @@ pub fn withdraw_usdt(ctx: Context<WithdrawUsdt>, amount: u64) -> Result<()> {
         PresaleError::InsufficientTreasuryBalance
     );
 
+    let now = Clock::get()?.unix_timestamp;
+    let state = &mut ctx.accounts.state;
+
+    // Reset after 24 hours
+    if now - state.last_withdraw_ts >= 86_400 {
+        state.withdrawn_today = 0;
+        state.last_withdraw_ts = now;
+    }
+
+    // Enforce daily limit
+    require!(
+        state.withdrawn_today + amount <= state.daily_withdraw_limit,
+        PresaleError::DailyWithdrawLimitExceeded
+    );
+
     token::transfer(
         CpiContext::new(
             ctx.accounts.token_program.to_account_info(),
@@ -48,6 +62,24 @@ pub fn withdraw_usdt(ctx: Context<WithdrawUsdt>, amount: u64) -> Result<()> {
         ),
         amount,
     )?;
+
+    state.withdrawn_today = state
+        .withdrawn_today
+        .checked_add(amount)
+        .ok_or(PresaleError::Overflow)?;
+
+    emit!(UsdtWithdrawn {
+        admin: ctx.accounts.admin.key(),
+        amount,
+        timestamp: Clock::get()?.unix_timestamp,
+    });
+
+    emit!(DailyWithdraw {
+        admin: ctx.accounts.admin.key(),
+        amount,
+        withdrawn_today: state.withdrawn_today,
+        timestamp: now,
+    });
 
     Ok(())
 }

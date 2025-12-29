@@ -1,5 +1,6 @@
 use anchor_lang::prelude::*;
 use crate::state::PresaleState;
+use crate::events::*;
 
 #[derive(Accounts)]
 pub struct Pause<'info> {
@@ -14,5 +15,9 @@ pub struct Pause<'info> {
 
 pub fn pause(ctx: Context<Pause>) -> Result<()> {
     ctx.accounts.state.paused = true;
+    emit!(PresalePaused {
+        admin: ctx.accounts.admin.key(),
+        timestamp: Clock::get()?.unix_timestamp,
+    });
     Ok(())
 }

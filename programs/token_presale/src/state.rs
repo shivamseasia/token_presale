@@ -14,6 +14,10 @@ pub struct PresaleState {
     pub presale_supply: u64,
     pub reserved_supply: u64,
     pub paused: bool,
+    
+    pub daily_withdraw_limit: u64,
+    pub withdrawn_today: u64,
+    pub last_withdraw_ts: i64,
 
     pub released_from_reserve: u64,
 

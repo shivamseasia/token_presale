@@ -1,13 +1,14 @@
 use anchor_lang::prelude::*;
 
 pub mod constants;
+pub mod events;
 pub mod errors;
 pub mod instructions;
 pub mod state;
 
 use instructions::*;
 
-declare_id!("uz3pV4j51aJQ88mSsh5VasZU6YLTepAgPK2Dgs3GpZr");
+declare_id!("5wxP6rTDcnCwuUzgwUEmxJ46AHPc2WUp3zbjvukT71sK");
 
 #[program]
 pub mod token_presale {
@@ -17,8 +18,9 @@ pub mod token_presale {
         ctx: Context<Initialize>,
         token_price_usdt: u64,
         presale_duration_secs: i64,
+        daily_withdraw_limit: u64,
     ) -> Result<()> {
-        initialize::initialize(ctx, token_price_usdt, presale_duration_secs)
+        initialize::initialize(ctx, token_price_usdt, presale_duration_secs, daily_withdraw_limit)
     }
 
     pub fn buy_tokens(ctx: Context<BuyTokens>, usdt_amount: u64) -> Result<()> {

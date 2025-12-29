@@ -34,4 +34,7 @@ pub enum PresaleError {
 
     #[msg("Presale is paused")]
     PresalePaused,
+
+    #[msg("Daily withdraw limit exceeded")]
+    DailyWithdrawLimitExceeded,
 }

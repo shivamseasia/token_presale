@@ -1,9 +1,7 @@
-use anchor_lang::prelude::*;
-use anchor_spl::token::{
-    self, Mint, Token, TokenAccount, MintTo, SetAuthority
-};
-use anchor_spl::token::spl_token::instruction::AuthorityType;
 use crate::state::*;
+use anchor_lang::prelude::*;
+use anchor_spl::token::spl_token::instruction::AuthorityType;
+use anchor_spl::token::{self, Mint, MintTo, SetAuthority, Token, TokenAccount};
 
 #[derive(Accounts)]
 pub struct Initialize<'info> {
@@ -47,8 +45,8 @@ pub fn initialize(
     ctx: Context<Initialize>,
     price_usdt: u64,
     presale_duration_secs: i64,
+    daily_withdraw_limit: u64,
 ) -> Result<()> {
-
     let total_supply = 100_000_000u64 * 1_000_000;
     let presale_supply = total_supply / 10;
     let reserved_supply = total_supply - presale_supply;
@@ -90,6 +88,10 @@ pub fn initialize(
     state.presale_supply = presale_supply;
     state.reserved_supply = reserved_supply;
     state.released_from_reserve = 0;
+
+    state.daily_withdraw_limit = daily_withdraw_limit;
+    state.withdrawn_today = 0;
+    state.last_withdraw_ts = Clock::get()?.unix_timestamp;
 
     state.token_price_usdt = price_usdt;
     state.presale_end_ts = Clock::get()?.unix_timestamp + presale_duration_secs;

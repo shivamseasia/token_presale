@@ -28,6 +28,8 @@ describe("token_presale", () => {
   const TOKEN_DECIMALS = 1_000_000;
   const USDT_DECIMALS = 1_000_000;
   const INITIAL_PRICE = new anchor.BN(50_000);
+  const DAILY_WITHDRAW_LIMIT = 10 * USDT_DECIMALS;
+
 
   before(async () => {
     // 1. Create Mints
@@ -66,7 +68,7 @@ describe("token_presale", () => {
     const duration = new anchor.BN(60 * 60 * 24 * 30 * 3);
 
     await program.methods
-      .initialize(INITIAL_PRICE, duration)
+      .initialize(INITIAL_PRICE, duration, new anchor.BN(DAILY_WITHDRAW_LIMIT))
       .accounts({
         admin: provider.wallet.publicKey,
         tokenMint: tokenMint,
@@ -174,7 +176,7 @@ describe("token_presale", () => {
     }
   });
   // ----------------------------------------------------------------
-  // 5. WITHDRAW USDT & PAUSE/UNPAUSE (New Tests)
+  // 5. WITHDRAW USDT
   // ----------------------------------------------------------------
 
   it("Allows admin to withdraw USDT and blocks non-admin", async () => {
@@ -190,11 +192,9 @@ describe("token_presale", () => {
       provider.wallet.publicKey
     );
 
-    const withdrawAmount = new anchor.BN(5 * USDT_DECIMALS);
-
-    // Admin withdraw works
+    // First withdraw: 5 USDT (OK)
     await program.methods
-      .withdrawUsdt(withdrawAmount)
+      .withdrawUsdt(new anchor.BN(5 * USDT_DECIMALS))
       .accounts({
         admin: provider.wallet.publicKey,
         state: statePda,
@@ -204,10 +204,29 @@ describe("token_presale", () => {
       } as any)
       .rpc();
 
+    // Second withdraw: 6 USDT (5 + 6 = 11 > 10 USDT limit, should fail)
+    try {
+      await program.methods
+        .withdrawUsdt(new anchor.BN(6 * USDT_DECIMALS))
+        .accounts({
+          admin: provider.wallet.publicKey,
+          state: statePda,
+          treasury: treasuryAccount,
+          destination: adminUsdt.address,
+          tokenProgram: TOKEN_PROGRAM_ID,
+        } as any)
+        .rpc();
+
+      assert.fail("Should fail due to daily withdraw limit");
+    } catch (e: any) {
+      const errCode = e.error?.errorCode?.code;
+      assert.equal(errCode, "DailyWithdrawLimitExceeded");
+    }
+
     // Non-admin blocked
     try {
       await program.methods
-        .withdrawUsdt(withdrawAmount)
+        .withdrawUsdt(new anchor.BN(6 * USDT_DECIMALS))
         .accounts({
           admin: buyers[0].publicKey,
           state: statePda,
