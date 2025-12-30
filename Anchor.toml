@@ -6,8 +6,8 @@ resolution = true
 skip-lint = true
 
 [programs.devnet]
-token_presale = "uz3pV4j51aJQ88mSsh5VasZU6YLTepAgPK2Dgs3GpZr"
-
+token_presale = "5wxP6rTDcnCwuUzgwUEmxJ46AHPc2WUp3zbjvukT71sK"
+ 
 [registry]
 url = "https://api.apr.dev"
 
